@@ -15,8 +15,12 @@ class MySession implements HttpSession {
 	private Properties m_props = new Properties();
 	private boolean m_valid = true;
 	
+	public MySession() {
+		m_props.setProperty("Creation-Time", Long.toString(System.currentTimeMillis()));
+	}
+	
 	public long getCreationTime() {
-		return (Long)m_props.get("creation-time");
+		return (Long)m_props.get("Creation-Time");
 	}
 
 	public String getId() {
@@ -24,20 +28,20 @@ class MySession implements HttpSession {
 	}
 
 	public long getLastAccessedTime() {
-		return (Long)m_props.get("last-accessed");
+		return (Long)m_props.get("Last-Accessed");
 	}
 
 
 	public ServletContext getServletContext() {
-		return (ServletContext)m_props.get("servlet-context");
+		return (ServletContext)m_props.get("Servlet-Context");
 	}
 
 	public void setMaxInactiveInterval(int arg0) {
-		m_props.setProperty("max-inactive-interval", Integer.toString(arg0));
+		m_props.setProperty("Max-Inactive-Interval", Integer.toString(arg0));
 	}
 
 	public int getMaxInactiveInterval() {
-		return (Integer)m_props.get("max-inactive-interval");
+		return (Integer)m_props.get("Max-Inactive-Interval");
 	}
 
 	public HttpSessionContext getSessionContext() {

@@ -9,7 +9,7 @@ import java.net.Socket;
 import org.junit.Before;
 import org.junit.Test;
 
-import TestHarness.TestHarness;
+import TestHarness.MyContainer;
 
 public class RequestTest {
 
@@ -44,7 +44,7 @@ public class RequestTest {
 
 	@Test
 	public void test() throws Exception {
-		TestHarness t = new TestHarness();
+		MyContainer t = new MyContainer();
 		String args[] = new String[3];
 		args[0]="/Users/karthikalle/Desktop/CIS 555/Homeworks/ms2/src/hw1/WEB-INF/web.xml";
 		args[1] = "GET";

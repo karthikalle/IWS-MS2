@@ -1,6 +1,6 @@
 package edu.upenn.cis455.webserver;
 
-import TestHarness.TestHarness;
+import TestHarness.MyContainer;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -152,7 +152,7 @@ public class WorkerThread extends Thread {
 	}
 
 	private boolean ifRequestToServlet() {
-		TestHarness t = new TestHarness();
+		MyContainer t = new MyContainer();
 		String args[] = new String[3];
 		args[0] = pathToWebXML;
 		args[1] = request;
@@ -406,6 +406,8 @@ public class WorkerThread extends Thread {
 		try {
 			output.write((requestVersion+" 505 Forbidden Request\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			output.write(("Content-Type: "+"text/html"+"\r\n").getBytes());
 			String response = "505: Version Not Supported ";
 			output.write(("Content-length: "+response.length()+"\r\n\r\n").getBytes());
@@ -423,6 +425,8 @@ public class WorkerThread extends Thread {
 			output.write((requestVersion+" 401 Forbidden Request\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
 			output.write(("Content-Type: "+"text/plain"+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			String response = "401: Forbidden Request ";
 			output.write(("Content-length: "+response.length()+"\r\n\r\n").getBytes());
 			if(!request.equals("HEAD"))
@@ -444,6 +448,8 @@ public class WorkerThread extends Thread {
 			output.write((requestVersion+" 200 OK\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
 			output.write(("Content-Type: "+"text/html"+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			String files = "";
 			files+="<html><body>";
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
@@ -470,6 +476,8 @@ public class WorkerThread extends Thread {
 
 			output.write((requestVersion+" 200 OK\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			output.write(("Content-Type: "+"text/html"+"\r\n\r\n").getBytes());
 			if(!request.equals("HEAD")) {
 				output.write(("<html><body><p>").getBytes());
@@ -503,6 +511,8 @@ public class WorkerThread extends Thread {
 			throws IOException {
 		output.write((requestVersion+" 404 Not Found OK\r\n").getBytes());                           
 		output.write(("Date: "+new Date()+"\r\n").getBytes());
+		output.write(("Connection: close\r\n").getBytes());
+
 		output.write(("Content-Type: "+"text/html"+"\r\n\r\n").getBytes());
 		if(!request.equals("HEAD")){
 			if(fileRequest.equals("/")) 
@@ -518,6 +528,8 @@ public class WorkerThread extends Thread {
 		try{
 			output.write((requestVersion+" 404 Bad Request\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			output.write(("Content-Type: "+"text/html"+"\r\n\r\n").getBytes());
 			if(!request.equals("HEAD")){
 				output.write(("<html><body>"+"404: Bad Request"+" </body></html>").getBytes());			
@@ -533,6 +545,8 @@ public class WorkerThread extends Thread {
 		try {
 			output.write((requestVersion+" 500 Server Error\r\n").getBytes());
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+
 			output.write(("Content-Type: "+"text/html"+"\r\n\r\n").getBytes());
 			if(!request.equals("HEAD"))
 				output.write(("<html><body>500: Server Error</html></body>\r\n").getBytes());

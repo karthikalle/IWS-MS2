@@ -35,9 +35,9 @@ public class MyResponse implements HttpServletResponse {
 	int bufferSize;
 	boolean isCommitted;
 	Socket s;
-	TestHarness container;
+	MyContainer container;
 
-	public MyResponse(TestHarness t) {
+	public MyResponse(MyContainer t) {
 		m_props = new HashMap<String,Object>();
 		pw = null;
 		bufferSize = 4096;

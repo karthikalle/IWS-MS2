@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -27,14 +28,16 @@ class MyRequest implements HttpServletRequest {
 	private Properties m_props = new Properties();
 	private MySession m_session = null;
 	private String m_method;
+	private MyResponse response;
 	//private HashMap<String,Object> session = new HashMap<String,Object>();
 
 	MyRequest() {
 
 	}
 
-	MyRequest(MySession session) {
-		m_session = session;
+	MyRequest(MySession s, MyResponse r) {
+		m_session = s;
+		response = r;
 	}
 
 	public String getAuthType() {	
@@ -42,7 +45,7 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public Cookie[] getCookies() {
-		
+
 		System.out.println("Printing params");
 		for(Object p:m_props.keySet()){
 			System.out.println(p.toString()+" "+m_props.getProperty(p.toString()));
@@ -55,8 +58,21 @@ class MyRequest implements HttpServletRequest {
 		Cookie[] cookieArray = new Cookie[c.length];
 		for(int i = 0;i<c.length;i++) {
 			String[] s = c[i].split("=");
+
+			if(s[0].equals("jsessionid")) {
+				System.out.println(s[0]+" "+s[1]);
+				MyServletContext context = (MyServletContext) getAttribute("Servlet-Context");
+				System.out.println(context);
+				MySession contextSession = (MySession) context.getAttribute("Session");
+				System.out.println(contextSession.getId().toString());
+				System.out.println("CS:id:"+contextSession.getAttribute("id"));
+				if(contextSession.getAttribute("id").equals(s[1]))
+					m_session = contextSession;
+			}
+
 			Cookie cookie = new Cookie(s[0],s[1]);
 			cookieArray[i] = cookie;
+
 		}
 		//return (Cookie[]) m_props.get("Cookie");
 		return cookieArray;
@@ -153,14 +169,35 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public HttpSession getSession(boolean arg0) {
+		getCookies();
 		if (arg0) {
-			if (! hasSession()) {
-				m_session = new MySession();
+			if (hasSession()) {
+				return m_session;
+				/*
+				MyServletContext context = (MyServletContext) getAttribute("Servlet-Context");
+				MySession s = (MySession) context.getAttribute("Session");
+				if(s.getAttribute("id").equals(m_session.getAttribute("id")))
+						return s;
+				 */
 			}
-		} else {
-			if (! hasSession()) {
-				m_session = null;
+			else {
+				if (! hasSession()) {
+					m_session = new MySession();
+					System.out.println(UUID.randomUUID());
+					m_session.setAttribute("id",UUID.randomUUID().toString());
+					System.out.println("Inserted into session:"+m_session.getId().toString());
+
+				}
 			}
+
+			Cookie c = new Cookie("jsessionid",m_session.getId());
+			c.setMaxAge(24000);
+			response.addCookie(c);
+			return m_session;
+		}
+		else {
+			if(!hasSession())
+				return null;
 		}
 		return m_session;
 	}
@@ -278,7 +315,7 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public void setAttribute(String arg0, Object arg1) {
-	//	System.out.println("Putting "+arg0+" "+arg1.toString());
+		//	System.out.println("Putting "+arg0+" "+arg1.toString());
 		m_props.put(arg0, arg1);
 	}
 

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import TestHarness.MyServletContext;
+
 /*
  * The HTTP Server accepts two arguments: 
  * the port and the root
@@ -15,11 +17,12 @@ import java.net.Socket;
  * format as the file.lastModified() uses that format
  * 
  */
-class HttpServer {
+public class HttpServer {
 	static int port;
 	static String root;
 	ServerSocket servSock;
 	static String pathToWebXML;
+	public static MyServletContext servletContext;
 	
 	public static void main(String args[]) throws IOException {
 
@@ -54,7 +57,7 @@ class HttpServer {
 
 	//Start the server
 	private void startServer() {
-
+		servletContext = null;
 		try {
 			servSock = new ServerSocket(8000, 2000);
 			System.out.println("Server Started");

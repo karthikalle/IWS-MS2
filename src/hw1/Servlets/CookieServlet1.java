@@ -14,7 +14,7 @@ public class CookieServlet1 extends HttpServlet {
 		c.setMaxAge(36000);
 		response.addCookie(d);*/
 
-		response.setStatus(408);
+		//response.setStatus(408);
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 		out.println("<HTML><HEAD><TITLE>Cookie Servlet 1</TITLE></HEAD><BODY>");

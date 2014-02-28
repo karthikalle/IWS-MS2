@@ -5,7 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import TestHarness.MyResponse;
-import TestHarness.TestHarness;
+import TestHarness.MyContainer;
 import static org.junit.Assert.*;
 
 import javax.servlet.http.Cookie;
@@ -60,7 +60,7 @@ public class ResponseTest {
 */
 	@Test
 	public void testreset() {
-		TestHarness t = new TestHarness();
+		MyContainer t = new MyContainer();
 		String args[] = new String[3];
 		args[0]="/Users/karthikalle/Desktop/CIS 555/Homeworks/ms2/src/hw1/WEB-INF/web.xml";
 		args[1] = "GET";

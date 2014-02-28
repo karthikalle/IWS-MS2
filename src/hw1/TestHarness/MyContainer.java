@@ -1,5 +1,6 @@
 package TestHarness;
 
+import edu.upenn.cis455.webserver.HttpServer;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * @author Todd J. Green, modified by Nick Taylor
  */
-public class TestHarness {	
+public class MyContainer {	
 	HashMap<String, Object> requestParams = new HashMap<String,Object>();
 	Socket s;
 
@@ -160,18 +161,23 @@ public class TestHarness {
 		}
 
 		Handler h = parseWebdotxml(args[0]);
-		MyServletContext context = createContext(h);
-
+		MyServletContext context = HttpServer.servletContext;
+		if(context==null){
+			context = createContext(h);
+			HttpServer.servletContext = context;
+		}
 		HashMap<String,HttpServlet> servlets = createServlets(h, context);
 
 		MySession fs = null;
 
 
 		for (int i = 1; i < args.length - 1; i += 2) {
-			MyRequest request = new MyRequest(fs);
 			MyResponse response = new MyResponse(this);
+			MyRequest request = new MyRequest(fs,response);
 
 			parseRequest(sock.getInputStream(),request);
+			
+			request.setAttribute("Servlet-Context", context);
 			//
 			//	response.addServSock(sock);
 			//
@@ -229,19 +235,14 @@ public class TestHarness {
 				return false;
 				//System.exit(-1);
 			}
+			
+			System.out.println("aaaaaaaaaaaaaaaaaa"+request.getSession().getId());
+			context.setAttribute("Session", request.getSession());
+			
 			//h.printEverything();
-			fs = (MySession) request.getSession(false);		
+			//fs = (MySession) request.getSession(false);		
 		}
 		return true;
-	}
-
-	public void writeBody(MyResponse response) throws IOException {
-		OutputStream out = s.getOutputStream();
-		System.out.println("Response Body:");
-		BufferedOutputStream o = new BufferedOutputStream(out);
-		PrintWriter pw = new PrintWriter(o,true);
-		pw.print(response.buffer.toString());
-		pw.flush();
 	}
 
 	public void writeHeader(MyResponse response)
@@ -267,9 +268,17 @@ public class TestHarness {
 		out.write("\r\n".getBytes());
 		response.isCommitted = true;
 		out.flush();
-
 	}
 
+	public void writeBody(MyResponse response) throws IOException {
+		OutputStream out = s.getOutputStream();
+		System.out.println("Response Body:");
+		BufferedOutputStream o = new BufferedOutputStream(out);
+		PrintWriter pw = new PrintWriter(o,true);
+		pw.print(response.buffer.toString());
+		pw.flush();
+	}
+	
 	private void parseRequest(InputStream input, MyRequest request) {
 		System.out.println("inside printing params");
 		System.out.println("Printing parameters");
