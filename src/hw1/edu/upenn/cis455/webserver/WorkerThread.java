@@ -87,7 +87,7 @@ public class WorkerThread extends Thread {
 			}
 
 			catch(IOException e) {
-				log.warning("Inside Process Request"+e.toString());
+				log.warning("Inside Process Request"+e.toString()+"\n");
 			}
 			catch (InterruptedException e) {
 				log.info("Thread :"+Thread.currentThread().getId()+" has been interrupted");
@@ -101,7 +101,7 @@ public class WorkerThread extends Thread {
 							sock.close();
 					}
 				} catch (IOException e) {
-					log.warning("Socket closing in finally:"+e.toString());
+					log.warning("Socket closing in finally:"+e.toString()+"\n");
 				}
 			} 
 		}
@@ -153,14 +153,14 @@ public class WorkerThread extends Thread {
 			}
 		}
 		catch(Exception e) {
-			log.warning("Exception in processRequest():"+e.toString());
+			log.warning("Exception in processRequest():"+e.toString()+"\n");
 			sendServerError();
 		}
 	}
 
 	private void sendErrorLog() {
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader("./error.log"));
+			BufferedReader reader = new BufferedReader(new FileReader("./errorlogs/error.log"));
 			String line = null;
 			output.write((requestVersion+" 200 OK\r\n").getBytes());                           
 			output.write(("Date: "+new Date()+"\r\n").getBytes());
@@ -169,11 +169,11 @@ public class WorkerThread extends Thread {
 			output.write(("<html><body><p>").getBytes());
 
 			while ((line = reader.readLine()) != null) {
-				output.write((line+"\n").getBytes());
+				output.write((line+"<br/>").getBytes());
 			}
 			output.write("</p></body></html>".getBytes());
 		} catch (IOException e) {
-			log.warning("Error while getting error log:"+e);
+			log.warning("Error while getting error log:"+e+"\n");
 			e.printStackTrace();
 		}
 	}
@@ -191,7 +191,7 @@ public class WorkerThread extends Thread {
 		try {
 			return container.doWork(args,sock,att);		
 		} catch (Exception e) {
-			log.warning("Exception in Servlet Container "+e);
+			log.warning("Exception in Servlet Container "+e+"\n");
 			e.printStackTrace();
 		}
 		return false;
@@ -293,7 +293,7 @@ public class WorkerThread extends Thread {
 			return false;
 
 		} catch (IOException e) {
-			log.warning("Thread "+Thread.currentThread().getId()+" started processing a request");
+			log.warning("Exception while Thread "+Thread.currentThread().getId()+" started processing a request"+"\n");
 			sendServerError();
 		}
 		return true;
@@ -315,7 +315,7 @@ public class WorkerThread extends Thread {
 			}
 		}
 		catch(IOException e){
-			log.warning("Exception in validatePath()"+e.toString());
+			log.warning("Exception in validatePath()"+e.toString()+"\n");
 			sendServerError();
 		}
 		log.info("Requested path is outside root");
@@ -375,11 +375,11 @@ public class WorkerThread extends Thread {
 				log.info("Sent the file!");
 			}
 			catch (FileNotFoundException e) {
-				log.info("File not found!");
+				log.warning("File not found!"+"\n");
 				sendFileNotFound();
 			}
 		} catch (IOException e) {
-			log.warning("Error while accessing file:"+e);
+			log.warning("Error while accessing file:"+e+"\n");
 			sendServerError();
 		}
 	}
@@ -410,7 +410,7 @@ public class WorkerThread extends Thread {
 		} 
 
 		catch(IOException e){
-			log.warning("Exception in determineIfModified"+e);
+			log.warning("Exception in determineIfModified"+e+"\n");
 			sendServerError();
 		}
 
@@ -442,7 +442,7 @@ public class WorkerThread extends Thread {
 				output.write(response.getBytes());
 		}
 		catch(Exception e) {
-			log.warning(e.toString());
+			log.warning(e.toString()+"\n");
 			sendServerError();
 		}
 	}
@@ -461,7 +461,7 @@ public class WorkerThread extends Thread {
 		}
 		catch(Exception e) {
 			sendServerError();
-			log.warning("Exception while sending forbidden"+e.toString());
+			log.warning("Exception while sending forbidden"+e.toString()+"\n");
 		}
 
 	}
@@ -491,7 +491,7 @@ public class WorkerThread extends Thread {
 			}
 		}
 		catch(IOException e) {
-			log.info("Exception inside sendDirectoryFiles():"+e.toString());
+			log.warning("Exception inside sendDirectoryFiles():"+e.toString()+"\n");
 			sendServerError();
 		}
 
@@ -531,7 +531,7 @@ public class WorkerThread extends Thread {
 			output.flush();
 		}
 		catch(IOException e) {
-			log.warning(e.toString());
+			log.warning(e.toString()+"\n");
 			sendServerError();
 		}
 	}
@@ -548,7 +548,8 @@ public class WorkerThread extends Thread {
 				output.write(("<html><body>"+"No file has been request"+" </body></html>").getBytes());
 			else {
 				output.write(("<html><body>404: "+fileRequest.substring(1)+" not found!</body></html>").getBytes());
-				System.out.println("Caught File not found exception");
+				//System.out.println("Caught File not found exception");
+				log.warning("File not found exception"+"\n");
 			}
 		}
 	}
@@ -565,9 +566,11 @@ public class WorkerThread extends Thread {
 			}
 		}
 		catch(Exception e) {
-			log.warning("Exception while sending bad request"+e);
+			log.warning("Exception while sending bad request"+e+"\n");
 			sendServerError();
 		}
+		log.warning("Bad Request"+"\n");
+
 	}
 
 	private void sendServerError() {
@@ -582,6 +585,8 @@ public class WorkerThread extends Thread {
 		} catch (IOException e) {
 			log.info(e.toString());	
 		}
+		log.warning("Server Error"+"\n");
+
 	}
 
 	private void sendExpectHeader() {
@@ -591,7 +596,7 @@ public class WorkerThread extends Thread {
 			output.write((requestVersion+" 100 Continue\r\n\r\n").getBytes());
 		}
 		catch(IOException e){
-			log.warning(e.toString());
+			log.warning(e.toString()+"\n");
 			sendServerError();
 		}
 	}

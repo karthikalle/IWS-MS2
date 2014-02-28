@@ -62,7 +62,7 @@ public class HttpServer {
 		log = Logger.getLogger(WorkerThread.class.getName());
 		FileHandler fh = null;
 		try {
-			fh = new FileHandler("./error.log");
+			fh = new FileHandler("./errorlogs/error.log");
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -102,7 +102,7 @@ public class HttpServer {
 			}
 			catch (IOException e) {
 				System.out.println("Stopped the server");
-				log.warning("Exception while starting the server: Stopped the server");
+				log.warning("Exception while starting the server: Stopped the server"+"\n");
 			}
 		}
 
@@ -114,7 +114,7 @@ public class HttpServer {
 				servSock.close();
 			} catch (IOException e) {
 				System.out.println("Cannot close the socket");
-				log.warning("Exception while closing the socket");
+				log.warning("Exception while closing the socket"+"\n");
 
 			}
 		}
