@@ -47,8 +47,9 @@ public class WorkerThread extends Thread {
 	String pathToWebXML;
 	int port;
 	HashMap<String,Object> att;
+	MyContainer container;
 
-	WorkerThread(RequestQueue q, String r, ThreadPool tp, int p, String pathtowebxml) {
+	WorkerThread(RequestQueue q, String r, ThreadPool tp, int p, MyContainer c) {
 		root = r;
 		queue = q;
 		threadPool = tp;
@@ -57,9 +58,9 @@ public class WorkerThread extends Thread {
 		requestVersion = null;
 		output = null;
 		port = p;
-		pathToWebXML = pathtowebxml;
 		log = Logger.getLogger(WorkerThread.class.getName());
 		log.setLevel(Level.WARNING);
+		container = c;
 
 	}
 
@@ -152,9 +153,8 @@ public class WorkerThread extends Thread {
 	}
 
 	private boolean ifRequestToServlet() {
-		MyContainer t = new MyContainer();
 		String args[] = new String[3];
-		args[0] = pathToWebXML;
+		args[0] = container.pathToWebXML;
 		args[1] = request;
 		System.out.println("File request"+fileRequest);
 		if(fileRequest.equals("/"))
@@ -163,7 +163,7 @@ public class WorkerThread extends Thread {
 		args[2] = fileURL[1];
 
 		try {
-			return t.doWork(args,sock,att);		
+			return container.doWork(args,sock,att);		
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

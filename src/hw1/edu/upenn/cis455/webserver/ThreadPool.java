@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import TestHarness.MyContainer;
+
 /*
  * The thread pool holds 20 worker threads
  * 
@@ -21,19 +23,20 @@ public class ThreadPool {
 	String pathToWebXML;
 	int intFlag;
 	HttpServer httpServer;
+	MyContainer container;
 
 	//Initialize the threadpool and start all the threads
-	ThreadPool (String rootFolder, HttpServer http,int port, String pathtowebxml) {
+	ThreadPool (String rootFolder, HttpServer http,int port, MyContainer c) {
 		root = rootFolder;
 		poolSize = 20;
 		reqQueue = new RequestQueue();
 		workers = new ArrayList<WorkerThread>();
 		intFlag = 0;
 		httpServer = http;
-		pathToWebXML = pathtowebxml;
+		container = c;
 
 		for(int i = 0; i<poolSize; i++) {
-			WorkerThread worker = new WorkerThread(reqQueue, root, this, port, pathToWebXML);
+			WorkerThread worker = new WorkerThread(reqQueue, root, this, port, container);
 			workers.add(worker);
 			worker.start();
 		}
@@ -45,6 +48,7 @@ public class ThreadPool {
 	}
 
 	public void shutDown() throws IOException {
+		container.performShutDown();
 		for(WorkerThread t: workers) {
 			t.isRunning = false;
 			t.interrupt();

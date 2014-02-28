@@ -59,22 +59,19 @@ class MyRequest implements HttpServletRequest {
 		for(int i = 0;i<c.length;i++) {
 			String[] s = c[i].split("=");
 
-			if(s[0].equals("jsessionid")) {
+			if(s[0].contains("jsessionid")) {
 				System.out.println(s[0]+" "+s[1]);
 				MyServletContext context = (MyServletContext) getAttribute("Servlet-Context");
-				System.out.println(context);
 				MySession contextSession = (MySession) context.getAttribute("Session");
 				System.out.println(contextSession.getId().toString());
 				System.out.println("CS:id:"+contextSession.getAttribute("id"));
 				if(contextSession.getAttribute("id").equals(s[1]))
 					m_session = contextSession;
 			}
-
-			Cookie cookie = new Cookie(s[0],s[1]);
+			Cookie cookie = new Cookie(s[0].trim(),s[1]);
 			cookieArray[i] = cookie;
 
 		}
-		//return (Cookie[]) m_props.get("Cookie");
 		return cookieArray;
 	}
 
@@ -150,7 +147,7 @@ class MyRequest implements HttpServletRequest {
 
 	//Associated with cookies
 	public String getRequestedSessionId() {
-		return null;
+		return m_session.getId();
 	}
 
 	public String getRequestURI() {

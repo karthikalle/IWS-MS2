@@ -1,6 +1,7 @@
 package TestHarness;
 
 import edu.upenn.cis455.webserver.HttpServer;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -23,8 +26,8 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Todd J. Green, modified by Nick Taylor
  */
 public class MyContainer {	
-	HashMap<String, Object> requestParams = new HashMap<String,Object>();
-	Socket s;
+	HashMap<String,HttpServlet> servlets;
+	public String pathToWebXML;
 
 	static class Handler extends DefaultHandler {
 		private int m_state = 0;
@@ -152,21 +155,35 @@ public class MyContainer {
 				+ "[<GET|POST> <servlet?params> ...]");
 	}
 
-	public boolean doWork(String[] args,Socket sock, HashMap<String,Object> att) throws Exception {
-		requestParams = att;
-		s = sock;
-		if (args.length < 3 || args.length % 2 == 0) {
+	public boolean initialize(String pathtowebxml) throws Exception {
+
+		if (pathtowebxml.length() == 0) {
 			usage();
-			System.exit(-1);
+			return false;
+			//System.exit(-1);
 		}
 
-		Handler h = parseWebdotxml(args[0]);
+		Handler h = parseWebdotxml(pathtowebxml);
 		MyServletContext context = HttpServer.servletContext;
 		if(context==null){
 			context = createContext(h);
 			HttpServer.servletContext = context;
 		}
-		HashMap<String,HttpServlet> servlets = createServlets(h, context);
+		servlets = createServlets(h, context);
+		pathToWebXML = pathtowebxml;
+		return true;
+	}
+
+	public boolean doWork(String[] args, Socket sock, HashMap<String,Object> att)
+			throws Exception, IOException, ServletException {
+		if (args.length < 3 || args.length % 2 == 0) {
+			usage();
+			System.exit(-1);
+		}
+		Socket s;
+
+		s = sock;
+		HashMap<String, Object> requestParams = att;
 
 		MySession fs = null;
 
@@ -174,13 +191,6 @@ public class MyContainer {
 		for (int i = 1; i < args.length - 1; i += 2) {
 			MyResponse response = new MyResponse(this);
 			MyRequest request = new MyRequest(fs,response);
-
-			parseRequest(sock.getInputStream(),request);
-			
-			request.setAttribute("Servlet-Context", context);
-			//
-			//	response.addServSock(sock);
-			//
 
 			System.out.println(args[i+1]+ "  "+i);
 			String[] strings = args[i+1].split("\\?|&|=");
@@ -192,27 +202,41 @@ public class MyContainer {
 			 */
 			String[] requestURL = args[i+1].split("[?]");
 			request.setAttribute("requestURL", requestURL[0]);
+			System.out.println("requestURL"+requestURL[0]);
 			String totalPath = strings[0];
+			System.out.println("totp"+totalPath);
+
 			String[] urlpath = totalPath.split("/");
-			HttpServlet servlet = servlets.get(urlpath[0]);
+			System.out.println(urlpath[0]);
 
 			if(urlpath.length>=2)
 				request.setAttribute("path-info", totalPath.substring(urlpath[0].length()));
 			//System.out.println("servlet-name "+urlpath[0]);
-			//System.out.println("path-info "+request.getAttribute("path-info"));
+			System.out.println("path-info "+request.getAttribute("path-info"));
 			if(strings.length>=2)
 				request.setAttribute("query-string", args[i+1].substring(totalPath.length()+1));
 			//	System.out.println("query-string "+request.getAttribute("query-string"));
 			//	System.out.println("requestURL "+request.getAttribute("requestURL"));
 			//Till here
 
-
+			HttpServlet servlet = servlets.get(urlpath[0]);
 			//There is no servlet for that request
 			if (servlet == null) {
 				System.err.println("error: cannot find mapping for servlet " + strings[0]);
 				//System.exit(-1);
 				return false;
 			}
+			response.setHeader("requestVersion", requestParams.get("requestVersion").toString());
+			response.addSocket(s);
+
+
+			parseRequest(sock.getInputStream(),request, requestParams);
+			MyServletContext context = HttpServer.servletContext;
+
+			request.setAttribute("Servlet-Context", context);
+			//
+			//	response.addServSock(sock);
+			//
 			for (int j = 1; j < strings.length - 1; j += 2) {
 				System.out.println(strings[j]+" "+strings[j+1]);
 				request.setParameter(strings[j], strings[j+1]);
@@ -224,9 +248,7 @@ public class MyContainer {
 
 				if(!response.isCommitted()) {
 					writeHeader(response);
-					
 					writeBody(response);
-					
 				}
 
 			} else {
@@ -235,10 +257,11 @@ public class MyContainer {
 				return false;
 				//System.exit(-1);
 			}
-			
-			System.out.println("aaaaaaaaaaaaaaaaaa"+request.getSession().getId());
-			context.setAttribute("Session", request.getSession());
-			
+
+			if(request.hasSession()) {
+				System.out.println("aaaaaaaaaaaaaaaaaa"+request.getSession().getId());
+				context.setAttribute("Session", request.getSession());
+			}
 			//h.printEverything();
 			//fs = (MySession) request.getSession(false);		
 		}
@@ -247,18 +270,22 @@ public class MyContainer {
 
 	public void writeHeader(MyResponse response)
 			throws IOException {
+		Socket s = response.getSocket();
 		OutputStream out = s.getOutputStream();
 		System.out.println("Response headers:");
 		if(response.statuscodes.isEmpty()) {
-		System.out.println(requestParams.get("requestVersion")+" 200 OK\r\n");
-		out.write((requestParams.get("requestVersion")+" 200 OK\r\n").getBytes());       
+
+			System.out.println(response.m_props.get("requestVersion")+" 200 OK\r\n");
+			out.write((response.m_props.get("requestVersion")+" 200 OK\r\n").getBytes()); 
+			response.m_props.remove("requestVersion");
 		}
 		else {
 			Set<Integer> key = response.statuscodes.keySet();
 			Iterator<Integer> a = key.iterator();
 			int k = a.next();
-			out.write((requestParams.get("requestVersion")+" "+k+response.statuscodes.get(k)+"\r\n").getBytes());
-			System.out.println((requestParams.get("requestVersion")+" "+k+" "+response.statuscodes.get(k)+"\r\n"));
+			out.write((response.m_props.get("requestVersion")+" "+k+response.statuscodes.get(k)+"\r\n").getBytes());
+			System.out.println((response.m_props.get("requestVersion")+" "+k+" "+response.statuscodes.get(k)+"\r\n"));
+			response.m_props.remove("requestVersion");
 
 		}
 		for(String k: response.m_props.keySet()) {
@@ -271,6 +298,7 @@ public class MyContainer {
 	}
 
 	public void writeBody(MyResponse response) throws IOException {
+		Socket s = response.getSocket();
 		OutputStream out = s.getOutputStream();
 		System.out.println("Response Body:");
 		BufferedOutputStream o = new BufferedOutputStream(out);
@@ -278,8 +306,8 @@ public class MyContainer {
 		pw.print(response.buffer.toString());
 		pw.flush();
 	}
-	
-	private void parseRequest(InputStream input, MyRequest request) {
+
+	private void parseRequest(InputStream input, MyRequest request, HashMap<String, Object> requestParams) {
 		System.out.println("inside printing params");
 		System.out.println("Printing parameters");
 		for(String p:requestParams.keySet()) {
@@ -289,6 +317,12 @@ public class MyContainer {
 
 	}
 
+	public void performShutDown() {
+		for(Servlet s: servlets.values()) {
+			s.destroy();
+		}
+		servlets.clear();
+	}
 
 }
 

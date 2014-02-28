@@ -66,7 +66,7 @@ public class ResponseTest {
 		args[1] = "GET";
 			args[2] = "cookie1";
 		try {
-			t.doWork(args,sock,null);
+			t.initialize(args,sock,null);
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}

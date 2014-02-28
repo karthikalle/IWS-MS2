@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import TestHarness.MyContainer;
 import TestHarness.MyServletContext;
 
 /*
@@ -23,8 +24,8 @@ public class HttpServer {
 	ServerSocket servSock;
 	static String pathToWebXML;
 	public static MyServletContext servletContext;
-	
-	public static void main(String args[]) throws IOException {
+
+	public static void main(String args[]) throws Exception {
 
 		//Check if two arguments are entered in command line
 		if(args.length<2){
@@ -56,35 +57,42 @@ public class HttpServer {
 	}
 
 	//Start the server
-	private void startServer() {
+	private void startServer() throws Exception {
 		servletContext = null;
 		try {
 			servSock = new ServerSocket(8000, 2000);
 			System.out.println("Server Started");
 			Socket sock = null;
-			ThreadPool t = new ThreadPool(root,this,port,pathToWebXML);
+			MyContainer container = new MyContainer();
 
-			//Until a shutdown request has been sent
-			while (t.intFlag == 0) {
-				sock = servSock.accept();
-				//Send the request to thread pool
-				t.handleRequest(sock);
+			if(!container.initialize(pathToWebXML)){
+				System.err.print("Invalid path to web.xml");
+				return;
 			}
-			sock.close();
-		}
-		catch (IOException e) {
-			System.out.println("Stopped the server");
-		}
-	}
+			
+				ThreadPool t = new ThreadPool(root,this,port,container);
 
-	/*Stop the Server when a shutdown is requested
-	 * Thread pool will request for the shutdown
-	 */
-	public void stopServer() {
-		try {
-			servSock.close();
-		} catch (IOException e) {
-			System.out.println("Cannot close the socket");
+				//Until a shutdown request has been sent
+				while (t.intFlag == 0) {
+					sock = servSock.accept();
+					//Send the request to thread pool
+					t.handleRequest(sock);
+				}
+				sock.close();
+			}
+			catch (IOException e) {
+				System.out.println("Stopped the server");
+			}
+		}
+
+		/*Stop the Server when a shutdown is requested
+		 * Thread pool will request for the shutdown
+		 */
+		public void stopServer() {
+			try {
+				servSock.close();
+			} catch (IOException e) {
+				System.out.println("Cannot close the socket");
+			}
 		}
 	}
-}

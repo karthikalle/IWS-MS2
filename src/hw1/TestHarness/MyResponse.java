@@ -266,4 +266,11 @@ public class MyResponse implements HttpServletResponse {
 		return (Locale) m_props.get("Locale");
 	}
 
+	public void addSocket(Socket sock) {
+		s = sock;
+	}
+	
+	public Socket getSocket() {
+		return s;
+	}
 }

@@ -52,7 +52,7 @@ public class RequestTest {
 			args[2] = "cookie1";
 		if(i==2)
 			args[2] = "cookie2";
-		t.doWork(args,sock,null);
+		t.initialize(args,sock,null);
 
 
 	}
