@@ -64,9 +64,8 @@ public class MyResponse implements HttpServletResponse {
 			return;
 		}
 		String c = (String) m_props.get("Set-Cookie");
-		//String a = c.substring(0,c.indexOf("Expires="));
-		//System.out.println(a);
-		m_props.put("Set-Cookie", c+"\nSet-Cookie:"+arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
+
+		m_props.put("Set-Cookie", c+"\r\nSet-Cookie:"+arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
 	}
 
 	public String getExpirationDate(Cookie arg0) {
@@ -94,6 +93,8 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public String encodeUrl(String arg0) {
+		if(m_props.get("session-id")!=null)
+			return arg0+";jsessionid="+m_props.get("session-id");
 		return arg0;
 	}
 
@@ -169,10 +170,7 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public String getCharacterEncoding() {
-		System.out.println("here");
-		if(m_props.get("Character-Encoding")==null)
-			return "ISO-8859-1";
-		return (String) m_props.get("Character-Encoding");
+		return "ISO-8859-1";
 	}
 
 	public String getContentType() {

@@ -3,6 +3,10 @@ package edu.upenn.cis455.webserver;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import TestHarness.MyContainer;
 
@@ -24,9 +28,11 @@ public class ThreadPool {
 	int intFlag;
 	HttpServer httpServer;
 	MyContainer container;
+	Logger log;
+
 
 	//Initialize the threadpool and start all the threads
-	ThreadPool (String rootFolder, HttpServer http,int port, MyContainer c) {
+	ThreadPool (String rootFolder, HttpServer http,int port, MyContainer c, Logger l) {
 		root = rootFolder;
 		poolSize = 20;
 		reqQueue = new RequestQueue();
@@ -34,9 +40,9 @@ public class ThreadPool {
 		intFlag = 0;
 		httpServer = http;
 		container = c;
-
+		log = l;
 		for(int i = 0; i<poolSize; i++) {
-			WorkerThread worker = new WorkerThread(reqQueue, root, this, port, container);
+			WorkerThread worker = new WorkerThread(reqQueue, root, this, port, container, log);
 			workers.add(worker);
 			worker.start();
 		}

@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -28,6 +29,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class MyContainer {	
 	HashMap<String,HttpServlet> servlets;
 	public String pathToWebXML;
+	Logger log;
 
 	static class Handler extends DefaultHandler {
 		private int m_state = 0;
@@ -155,7 +157,7 @@ public class MyContainer {
 				+ "[<GET|POST> <servlet?params> ...]");
 	}
 
-	public boolean initialize(String pathtowebxml) throws Exception {
+	public boolean initialize(String pathtowebxml, Logger l) throws Exception {
 
 		if (pathtowebxml.length() == 0) {
 			usage();
@@ -171,6 +173,7 @@ public class MyContainer {
 		}
 		servlets = createServlets(h, context);
 		pathToWebXML = pathtowebxml;
+		log = l;
 		return true;
 	}
 
@@ -243,10 +246,17 @@ public class MyContainer {
 			}
 
 			if (args[i].compareTo("GET") == 0 || args[i].compareTo("POST") == 0) {
+				
 				request.setMethod(args[i]);
 				servlet.service(request, response);
 
 				if(!response.isCommitted()) {
+					
+					if(request.hasSession()) {
+						System.out.println("aaaaaaaaaaaaaaaaaa"+request.getSession().getId());
+						context.setAttribute("Session", request.getSession());
+					}
+					
 					writeHeader(response);
 					writeBody(response);
 				}
@@ -257,11 +267,9 @@ public class MyContainer {
 				return false;
 				//System.exit(-1);
 			}
+			
 
-			if(request.hasSession()) {
-				System.out.println("aaaaaaaaaaaaaaaaaa"+request.getSession().getId());
-				context.setAttribute("Session", request.getSession());
-			}
+			
 			//h.printEverything();
 			//fs = (MySession) request.getSession(false);		
 		}

@@ -14,6 +14,7 @@ class MySession implements HttpSession {
 
 	private Properties m_props = new Properties();
 	private boolean m_valid = true;
+	private boolean is_new;
 	
 	public MySession() {
 		m_props.setProperty("Creation-Time", Long.toString(System.currentTimeMillis()));
@@ -91,7 +92,7 @@ class MySession implements HttpSession {
 	}
 
 	public boolean isNew() {
-		return false;
+		return (boolean) m_props.get("isNew");
 	}
 
 	boolean isValid() {

@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,8 +17,10 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /*
  * Worker threads:
@@ -49,7 +52,7 @@ public class WorkerThread extends Thread {
 	HashMap<String,Object> att;
 	MyContainer container;
 
-	WorkerThread(RequestQueue q, String r, ThreadPool tp, int p, MyContainer c) {
+	WorkerThread(RequestQueue q, String r, ThreadPool tp, int p, MyContainer c, Logger l) {
 		root = r;
 		queue = q;
 		threadPool = tp;
@@ -58,8 +61,7 @@ public class WorkerThread extends Thread {
 		requestVersion = null;
 		output = null;
 		port = p;
-		log = Logger.getLogger(WorkerThread.class.getName());
-		log.setLevel(Level.WARNING);
+		log = l;
 		container = c;
 
 	}
@@ -135,7 +137,11 @@ public class WorkerThread extends Thread {
 						sock.close();
 						return;
 					}					
-
+					else if(fileRequest.substring(1).equals("errorlog")) {
+						sendErrorLog();
+						sock.close();
+						return;
+					}		
 					//Get the file or else
 					else{					
 						getFile();
@@ -152,6 +158,26 @@ public class WorkerThread extends Thread {
 		}
 	}
 
+	private void sendErrorLog() {
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader("./error.log"));
+			String line = null;
+			output.write((requestVersion+" 200 OK\r\n").getBytes());                           
+			output.write(("Date: "+new Date()+"\r\n").getBytes());
+			output.write(("Connection: close\r\n").getBytes());
+			output.write(("Content-Type: "+"text/html"+"\r\n\r\n").getBytes());
+			output.write(("<html><body><p>").getBytes());
+
+			while ((line = reader.readLine()) != null) {
+				output.write((line+"\n").getBytes());
+			}
+			output.write("</p></body></html>".getBytes());
+		} catch (IOException e) {
+			log.warning("Error while getting error log:"+e);
+			e.printStackTrace();
+		}
+	}
+
 	private boolean ifRequestToServlet() {
 		String args[] = new String[3];
 		args[0] = container.pathToWebXML;
@@ -165,6 +191,7 @@ public class WorkerThread extends Thread {
 		try {
 			return container.doWork(args,sock,att);		
 		} catch (Exception e) {
+			log.warning("Exception in Servlet Container "+e);
 			e.printStackTrace();
 		}
 		return false;
@@ -239,7 +266,7 @@ public class WorkerThread extends Thread {
 				StringTokenizer st = new StringTokenizer(str,":");
 				String parameter = st.nextToken();
 				att.put(parameter, str.substring(parameter.length()+2));
-				
+
 				if(str.contains("Expect: 100-Continue"))
 					expectFlag = true;
 
@@ -249,7 +276,7 @@ public class WorkerThread extends Thread {
 				}
 				if(expectFlag&&isModifiedFlag)
 					break;
-				
+
 			}
 
 			//Send 100 header if there is a expected request
@@ -495,7 +522,9 @@ public class WorkerThread extends Thread {
 				}
 				output.write(("<html><body>"
 						+"<form action=\"shutdown\" method=\"post\">"+"<button type=\"submit\" "
-						+ "value=\"shutdown\">Shutdown</button>").getBytes());
+						+ "value=\"shutdown\">Shutdown</button></form>").getBytes());
+				output.write(("<form action =\"errorlog\" method=\"post\">"+"<button type=\"submit\" "
+						+ "value=\"errorlog\">Error Log</button></form>").getBytes());
 				output.write(("</p></body></html>").getBytes());
 			}
 			status.append("\n");

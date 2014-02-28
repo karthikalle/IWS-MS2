@@ -3,6 +3,10 @@ package edu.upenn.cis455.webserver;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import TestHarness.MyContainer;
 import TestHarness.MyServletContext;
@@ -24,6 +28,7 @@ public class HttpServer {
 	ServerSocket servSock;
 	static String pathToWebXML;
 	public static MyServletContext servletContext;
+	Logger log;
 
 	public static void main(String args[]) throws Exception {
 
@@ -54,23 +59,38 @@ public class HttpServer {
 		port = p;
 		root = r;
 		pathToWebXML = pathTowebxml;
+		log = Logger.getLogger(WorkerThread.class.getName());
+		FileHandler fh = null;
+		try {
+			fh = new FileHandler("./error.log");
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}  
+        log.addHandler(fh);  
+        //logger.setLevel(Level.ALL);  
+        SimpleFormatter formatter = new SimpleFormatter();  
+        fh.setFormatter(formatter);  
+        //log.info("Error log");  
+		log.setLevel(Level.WARNING);
 	}
 
 	//Start the server
 	private void startServer() throws Exception {
 		servletContext = null;
 		try {
-			servSock = new ServerSocket(8000, 2000);
+			servSock = new ServerSocket(port, 2000);
 			System.out.println("Server Started");
 			Socket sock = null;
 			MyContainer container = new MyContainer();
 
-			if(!container.initialize(pathToWebXML)){
+			if(!container.initialize(pathToWebXML, log)){
 				System.err.print("Invalid path to web.xml");
 				return;
 			}
 			
-				ThreadPool t = new ThreadPool(root,this,port,container);
+				ThreadPool t = new ThreadPool(root,this,port,container, log);
 
 				//Until a shutdown request has been sent
 				while (t.intFlag == 0) {
@@ -82,6 +102,7 @@ public class HttpServer {
 			}
 			catch (IOException e) {
 				System.out.println("Stopped the server");
+				log.warning("Exception while starting the server: Stopped the server");
 			}
 		}
 
@@ -93,6 +114,8 @@ public class HttpServer {
 				servSock.close();
 			} catch (IOException e) {
 				System.out.println("Cannot close the socket");
+				log.warning("Exception while closing the socket");
+
 			}
 		}
 	}

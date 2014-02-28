@@ -29,6 +29,7 @@ class MyRequest implements HttpServletRequest {
 	private MySession m_session = null;
 	private String m_method;
 	private MyResponse response;
+	private boolean fromCookie;
 	//private HashMap<String,Object> session = new HashMap<String,Object>();
 
 	MyRequest() {
@@ -166,9 +167,14 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public HttpSession getSession(boolean arg0) {
+		if(response.isCommitted())
+			throw new IllegalStateException();
+
 		getCookies();
 		if (arg0) {
 			if (hasSession()) {
+				fromCookie = true;
+				m_session.putValue("isNew", false);
 				return m_session;
 				/*
 				MyServletContext context = (MyServletContext) getAttribute("Servlet-Context");
@@ -179,7 +185,9 @@ class MyRequest implements HttpServletRequest {
 			}
 			else {
 				if (! hasSession()) {
+					fromCookie = false;
 					m_session = new MySession();
+					m_session.putValue("isNew", true);
 					System.out.println(UUID.randomUUID());
 					m_session.setAttribute("id",UUID.randomUUID().toString());
 					System.out.println("Inserted into session:"+m_session.getId().toString());
@@ -188,7 +196,7 @@ class MyRequest implements HttpServletRequest {
 			}
 
 			Cookie c = new Cookie("jsessionid",m_session.getId());
-			c.setMaxAge(24000);
+			c.setMaxAge(4000);
 			response.addCookie(c);
 			return m_session;
 		}
@@ -204,20 +212,20 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public boolean isRequestedSessionIdValid() {
-		return false;
+		return m_session.isValid();
 	}
 
 	public boolean isRequestedSessionIdFromCookie() {
-		return false;
+		return fromCookie;
 	}
 
 	public boolean isRequestedSessionIdFromURL() {
-		return false;
+		return !fromCookie;
 	}
 
 
 	public boolean isRequestedSessionIdFromUrl() {
-		return false;
+		return !fromCookie;
 	}
 
 	public Object getAttribute(String arg0) {
@@ -229,12 +237,14 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public String getCharacterEncoding() {
-		return null;
+		if (m_props.getProperty("Character-Encoding")==null)
+			return "ISO-8859-1";
+		return m_props.getProperty("Character-Encoding");
 	}
 
 	public void setCharacterEncoding(String arg0)
 			throws UnsupportedEncodingException {
-
+		m_props.setProperty("Character-Encoding", arg0);
 	}
 
 	public int getContentLength() {
@@ -321,7 +331,7 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public Locale getLocale() {
-		return null;
+		return (Locale) m_props.get("Locale");
 	}
 
 	//Not Required
@@ -355,7 +365,7 @@ class MyRequest implements HttpServletRequest {
 
 	//local address: 127.0.0.1
 	public String getLocalAddr() {
-		return (String)m_props.get("local-addr");
+		return "127.0.0.1";
 	}
 
 	public int getLocalPort() {
