@@ -1,19 +1,12 @@
 package TestHarness;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.io.Writer;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.DateFormat;
-import java.text.ParseException;
+import java.nio.channels.IllegalSelectorException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -33,40 +26,47 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class MyResponse implements HttpServletResponse {
 
-	HashMap<String,Object> m_props;
+	HashMap<Integer,String> status = new HashMap<Integer,String>();
+
+	public HashMap<String,Object> m_props;
 	HashMap<Integer,String> statuscodes = new HashMap<Integer,String>();
 	PrintWriter pw;
 	StringWriter buffer;
 	int bufferSize;
 	boolean isCommitted;
 	Socket s;
+	TestHarness container;
 
-	public MyResponse() {
+	public MyResponse(TestHarness t) {
 		m_props = new HashMap<String,Object>();
 		pw = null;
 		bufferSize = 4096;
 		isCommitted = false;
 		buffer = null;
+		container = t;
+		status.put(100, "Continue");
+		status.put(200, "OK");
+		status.put(204, "No Content");
+		status.put(301, "Moved Permanently");
+		status.put(304, "Not Modified");
+		status.put(400, "Bad Request");
+		status.put(401, "Unauthorized");
+		status.put(403, "Forbidden");
+		status.put(404, "Not Found");
+		status.put(408, "Request Timeout");
+		status.put(500, "Internal Server Error");
 	}
 
 	public void addCookie(Cookie arg0) {
 
 		if(!m_props.containsKey("Set-Cookie")){
-			//Cookie c = new Cookie("Set-Cookie",arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
-			//m_props.put("Cookie", c);
 			m_props.put("Set-Cookie", arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
-			System.out.println("Inserting Cookie:"+m_props.get("Set-Cookie"));
-
 			return;
 		}
-
-		//	Cookie c = (Cookie) m_props.get("Cookie");
-		//	String val = c.getValue();
-		//	c.setValue(val+arg0.getName()+"="+arg0.getValue()+";");
 		String c = (String) m_props.get("Set-Cookie");
-		m_props.put("Set-Cookie", c+"; "+arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
-		System.out.println("Inserting Cookie:"+m_props.get("Set-Cookie"));
-
+		//String a = c.substring(0,c.indexOf("Expires="));
+		//System.out.println(a);
+		m_props.put("Set-Cookie", c+"\nSet-Cookie:"+arg0.getName()+"="+arg0.getValue()+"; "+"Expires"+"="+getExpirationDate(arg0));
 	}
 
 	public String getExpirationDate(Cookie arg0) {
@@ -84,7 +84,9 @@ public class MyResponse implements HttpServletResponse {
 
 	//Add session id to the end
 	public String encodeURL(String arg0) {
-		return arg0+";jsessionid="+"id";
+		if(m_props.get("session-id")!=null)
+			return arg0+";jsessionid="+m_props.get("session-id");
+		return arg0;
 	}
 
 	public String encodeRedirectURL(String arg0) {
@@ -100,11 +102,19 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void sendError(int arg0, String arg1) throws IOException {
-
+		if(isCommitted())
+			throw new IllegalStateException();
+		else {
+			statuscodes.clear();
+			statuscodes.put(arg0, arg1);
+		}
 	}
 
 	public void sendError(int arg0) throws IOException {
-
+		if(isCommitted())
+			throw new IllegalStateException();
+		else
+			statuscodes.put(arg0, "");
 	}
 
 	public void sendRedirect(String arg0) throws IOException {
@@ -151,7 +161,7 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void setStatus(int arg0) {
-		return;
+		statuscodes.put(arg0, status.get(arg0));
 	}
 
 	public void setStatus(int arg0, String arg1) {
@@ -189,7 +199,7 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void setCharacterEncoding(String arg0) {
-		return;
+		m_props.put("Character-Encoding",arg0);
 	}
 
 	public void setContentLength(int arg0) {
@@ -215,28 +225,18 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void flushBuffer() throws IOException {
-		//writeStatusCodeAndHeader();
-		
-		
-	}
-
-	private void writeStatusCodeAndHeader() {
-		String toBeSent = "";
-		toBeSent += m_props.get("Protocol")+" ";
-		m_props.remove("Protocol");
-		if(statuscodes.isEmpty()) {
-			toBeSent += "200 OK\r\n";
-		}
-		else {
-			for(String s: m_props.keySet()) {
-				toBeSent += s+" "+m_props.get(s);
-			}
-		}
-		System.out.println("TO be sent:"+toBeSent);
+		container.writeHeader(this);
+		container.writeBody(this);
+		isCommitted = true;
 	}
 
 	public void resetBuffer() {
-		buffer.getBuffer().setLength(0);
+		if(!isCommitted()){
+			buffer.getBuffer().setLength(0);
+			System.out.println("Buffer"+buffer);
+			return;
+		}
+		throw new IllegalStateException();		
 	}
 
 	/*
@@ -248,20 +248,22 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void reset() {
-		if(!isCommitted())
+		if(!isCommitted()){
 			buffer.getBuffer().setLength(0);
+			m_props.clear();
+			statuscodes.clear();
+			System.out.println("Buffer"+buffer);
+			return;
+		}
+		throw new IllegalStateException();		 
 	}
 
 	public void setLocale(Locale arg0) {
-		
+		m_props.put("Locale",arg0);
 	}
 
 	public Locale getLocale() {
-		return null;
-	}
-
-	public void addServSock(Socket sock) {
-		s = sock;
+		return (Locale) m_props.get("Locale");
 	}
 
 }

@@ -330,8 +330,8 @@ public class WorkerThread extends Thread {
 				out.write((requestVersion+" 200 OK\r\n").getBytes());                           
 				out.write(("Content-Length: " + len + "\r\n").getBytes()); 
 				out.write(("Content-Type: "+contentType+"\r\n").getBytes());
+				out.write(("Connection: close\r\n").getBytes());
 				out.write(("Last-Modified: "+new Date(f.lastModified())+"\r\n\r\n").getBytes());
-
 				if(!request.equals("HEAD"))
 				{
 					int in;

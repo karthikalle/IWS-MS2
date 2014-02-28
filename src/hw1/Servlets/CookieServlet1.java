@@ -10,15 +10,19 @@ public class CookieServlet1 extends HttpServlet {
 		c.setMaxAge(36000);
 		response.addCookie(c);
 		
-	/*	Cookie d = new Cookie("TestCookie", "12345");
+		/*Cookie d = new Cookie("TestCookie", "12345");
 		c.setMaxAge(36000);
 		response.addCookie(d);*/
 
+		response.setStatus(408);
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 		out.println("<HTML><HEAD><TITLE>Cookie Servlet 1</TITLE></HEAD><BODY>");
 		out.println("<P>Added cookie (TestCookie,54321) to response.</P>");
 		out.println("<P>Continue to <A HREF=\"cookie2\">Cookie Servlet 2</A>.</P>");
-		out.println("</BODY></HTML>");		
+		out.println("</BODY></HTML>");	
+		
+		//response.reset();
+		//response.flushBuffer();
 	}
 }
