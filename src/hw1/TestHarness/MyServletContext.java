@@ -179,7 +179,7 @@ public class MyServletContext implements ServletContext {
 			attributes.put(name, object);
 	}
 	
-	void setInitParam(String name, String value) {
+	public void setInitParam(String name, String value) {
 		initParams.put(name, value);
 	}
 }

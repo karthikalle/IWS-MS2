@@ -334,7 +334,7 @@ public class WorkerThread extends Thread {
 	private void getFile() {
 		if(fileRequest.equals("/"))
 			fileRequest = "";
-		System.out.println("inside get file");
+	//	System.out.println("inside get file");
 		System.out.println(root+fileRequest);
 		try {
 			try {

@@ -6,7 +6,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import TestHarness.MyResponse;
 import TestHarness.MyContainer;
@@ -192,7 +196,20 @@ public class ResponseTest {
 		if(!flag)
 			assertTrue(true);
 	}
+	
+	@Test
+	public void testExpirationDate() {
+		MyResponse r = new MyResponse(c);
+		Cookie co = new Cookie("1","1");
+		System.out.println(r.getExpirationDate(co));
+		Calendar now = Calendar.getInstance(); 
+		SimpleDateFormat df = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z",Locale.US); 
+		df.setTimeZone(TimeZone.getTimeZone("GMT")); 
+		String date1 = df.format(now.getTimeInMillis());	
+		assertEquals(r.getExpirationDate(co),date1);
 
+	}
+	
 	
 	@Test
 	public void testAfterFlushBufferIfBufferEmpty() throws IOException {

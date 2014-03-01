@@ -34,7 +34,7 @@ public class MyServletConfig implements ServletConfig {
 		return name;
 	}
 
-	void setInitParam(String name, String value) {
+	public void setInitParam(String name, String value) {
 		initParams.put(name, value);
 	}
 }

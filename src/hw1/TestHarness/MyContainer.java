@@ -133,7 +133,7 @@ public class MyContainer {
 		return fc;
 	}
 
-	private static HashMap<String,HttpServlet> createServlets(Handler h, MyServletContext fc) throws Exception {
+	public static HashMap<String,HttpServlet> createServlets(Handler h, MyServletContext fc) throws Exception {
 		HashMap<String,HttpServlet> servlets = new HashMap<String,HttpServlet>();
 		for (String servletName : h.m_servlets.keySet()) {
 			MyServletConfig config = new MyServletConfig(servletName, fc);

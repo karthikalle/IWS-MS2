@@ -2,6 +2,7 @@ package ServletTest;
 
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.Vector;
 
 import TestHarness.MyServletContext;
 import static org.junit.Assert.*;
@@ -16,12 +17,12 @@ public class ContextTest {
 		myContext = new MyServletContext();
 	}
 	@Test
-	public void testGetAttribute1() {
+	public void testGetAttributeNull() {
 		assertNull(myContext.getAttribute("a"));
 	}
 	
 	@Test
-	public void testGetAttribute2() {
+	public void testGetAttribute() {
 		myContext.setAttribute("a", "aaa");
 		assertEquals("aaa",myContext.getAttribute("a"));
 	}
@@ -37,4 +38,20 @@ public class ContextTest {
 			assertTrue(t.equals("b")||t.equals("c")||t.equals("d"));
 		}
 	}
+	
+	@Test
+	public void testRemoveAttributes() {
+		myContext.setAttribute("a", "A");
+		myContext.setAttribute("b", "A");
+		myContext.removeAttribute("a");
+		myContext.removeAttribute("b");
+		assertFalse(myContext.getAttributeNames().hasMoreElements());
+	}
+	
+	@Test
+	public void testParams() {
+		myContext.setInitParam("a", "10");
+		assertEquals(myContext.getInitParameter("a"),"10");
+	}
 }
+
