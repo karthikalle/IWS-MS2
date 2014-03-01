@@ -172,6 +172,7 @@ public class WorkerThread extends Thread {
 				output.write((line+"<br/>").getBytes());
 			}
 			output.write("</p></body></html>".getBytes());
+			reader.close();
 		} catch (IOException e) {
 			log.warning("Error while getting error log:"+e+"\n");
 			e.printStackTrace();

@@ -33,7 +33,7 @@ public class HttpServer {
 	public static void main(String args[]) throws Exception {
 
 		//Check if two arguments are entered in command line
-		if(args.length<2){
+		if(args.length<3){
 			System.out.println("*** Karthik Alle: kalle");
 			return;
 		}
@@ -59,7 +59,7 @@ public class HttpServer {
 		port = p;
 		root = r;
 		pathToWebXML = pathTowebxml;
-		log = Logger.getLogger(WorkerThread.class.getName());
+		log = Logger.getLogger(HttpServer.class.getName());
 		FileHandler fh = null;
 		try {
 			fh = new FileHandler("./errorlogs/error.log");

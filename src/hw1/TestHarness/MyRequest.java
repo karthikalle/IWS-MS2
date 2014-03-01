@@ -22,7 +22,7 @@ import javax.servlet.http.HttpSession;
 /**
  * @author Todd J. Green
  */
-class MyRequest implements HttpServletRequest {
+public class MyRequest implements HttpServletRequest {
 
 	private Properties m_params = new Properties();
 	private Properties m_props = new Properties();
@@ -36,7 +36,7 @@ class MyRequest implements HttpServletRequest {
 
 	}
 
-	MyRequest(MySession s, MyResponse r) {
+	public MyRequest(MySession s, MyResponse r) {
 		m_session = s;
 		response = r;
 	}
@@ -152,18 +152,29 @@ class MyRequest implements HttpServletRequest {
 	}
 
 	public String getRequestURI() {
-		return m_params.getProperty("requestURI");
+		String s="";
+		if(getContextPath()!=null)
+			s+=getContextPath();
+		if(getServletPath()!=null)
+			s+=getServletPath();
+		if(getPathInfo()!=null)
+			s+=getPathInfo();
+		return s;
 	}
 
 	//done
 	public StringBuffer getRequestURL() {
 		StringBuffer s = new StringBuffer();
-		s.append(m_params.getProperty("requestURL"));
+		s.append("http://localhost:7777/");
+		if(getRequestURI() !=null )
+			s.append(getRequestURI());
+		if(getQueryString()!=null)
+			s.append("/"+getQueryString());
 		return s;
 	}
 
 	public String getServletPath() {
-		return null;
+		return m_props.getProperty("servlet-path");
 	}
 
 	public HttpSession getSession(boolean arg0) {
@@ -372,7 +383,7 @@ class MyRequest implements HttpServletRequest {
 		return Integer.parseInt(m_props.getProperty("port"));
 	}
 
-	void setMethod(String method) {
+	public void setMethod(String method) {
 		m_method = method;
 	}
 

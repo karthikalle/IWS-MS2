@@ -29,11 +29,11 @@ public class MyResponse implements HttpServletResponse {
 	HashMap<Integer,String> status = new HashMap<Integer,String>();
 
 	public HashMap<String,Object> m_props;
-	HashMap<Integer,String> statuscodes = new HashMap<Integer,String>();
+	public HashMap<Integer,String> statuscodes = new HashMap<Integer,String>();
 	PrintWriter pw;
-	StringWriter buffer;
+	public StringWriter buffer;
 	int bufferSize;
-	boolean isCommitted;
+	public boolean isCommitted;
 	Socket s;
 	MyContainer container;
 
@@ -134,7 +134,7 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void addDateHeader(String arg0, long arg1) {
-		String result = (String) m_props.get(arg0);
+		String result = m_props.get(arg0).toString();
 		m_props.put(arg0,result+","+arg1);
 	}
 
@@ -162,6 +162,7 @@ public class MyResponse implements HttpServletResponse {
 	}
 
 	public void setStatus(int arg0) {
+		if(status.get(arg0)!=null)
 		statuscodes.put(arg0, status.get(arg0));
 	}
 

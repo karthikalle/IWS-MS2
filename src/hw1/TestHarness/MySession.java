@@ -10,7 +10,7 @@ import javax.servlet.http.HttpSessionContext;
 /**
  * @author Todd J. Green
  */
-class MySession implements HttpSession {
+public class MySession implements HttpSession {
 
 	private Properties m_props = new Properties();
 	private boolean m_valid = true;

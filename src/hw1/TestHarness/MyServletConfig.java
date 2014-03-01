@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * @author Nick Taylor
  */
-class MyServletConfig implements ServletConfig {
+public class MyServletConfig implements ServletConfig {
 	private String name;
 	private MyServletContext context;
 	private HashMap<String,String> initParams;
