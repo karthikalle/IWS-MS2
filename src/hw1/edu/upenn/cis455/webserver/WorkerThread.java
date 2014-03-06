@@ -334,7 +334,42 @@ public class WorkerThread extends Thread {
 	private void getFile() {
 		if(fileRequest.equals("/"))
 			fileRequest = "";
-	//	System.out.println("inside get file");
+		System.out.println("File File File File :"+fileRequest); 
+		if(fileRequest.equals("/index"))
+		{
+			System.out.println("Inside Index");
+			try{
+				File f = new File("src/hw1/index.jsp");
+				InputStream din = new FileInputStream(f);
+				PrintStream out = new PrintStream(new BufferedOutputStream(output));
+				int len = (int) f.length();      
+				byte[] buf = new byte[4096];
+				System.out.println(len);
+
+				out.write((requestVersion+" 200 OK\r\n").getBytes());                           
+				out.write(("Content-Length: " + len + "\r\n").getBytes()); 
+				out.write(("Content-Type: "+"text/html"+"\r\n").getBytes());
+				out.write(("Connection: close\r\n").getBytes());
+				out.write(("Last-Modified: "+new Date(f.lastModified())+"\r\n\r\n").getBytes());
+				if(!request.equals("HEAD"))
+				{
+					int in;
+					while ((in = din.read(buf))>0&&isRunning) {
+						out.write(buf,0,in);      
+					}
+					if(!isRunning) 
+						log.info("Shutdown command when sending bytes of file");
+
+				}
+				out.flush();
+			}
+			catch(Exception e){
+				log.warning(e.toString());
+			}
+			
+			return;
+		}
+		//	System.out.println("inside get file");
 		System.out.println(root+fileRequest);
 		try {
 			try {
@@ -622,6 +657,8 @@ public class WorkerThread extends Thread {
 			return "pdf";
 		if(ext.equals("css"))
 			return "css";
+		if(ext.equals("jsp"))
+			return "application/json";
 		return null;
 	}
 }

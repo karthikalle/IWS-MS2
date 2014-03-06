@@ -34,7 +34,7 @@ public class ThreadPool {
 	//Initialize the threadpool and start all the threads
 	ThreadPool (String rootFolder, HttpServer http,int port, MyContainer c, Logger l) {
 		root = rootFolder;
-		poolSize = 20;
+		poolSize = 50;
 		reqQueue = new RequestQueue();
 		workers = new ArrayList<WorkerThread>();
 		intFlag = 0;

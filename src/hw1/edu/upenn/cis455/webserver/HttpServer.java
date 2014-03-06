@@ -68,11 +68,11 @@ public class HttpServer {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}  
-        log.addHandler(fh);  
-        //logger.setLevel(Level.ALL);  
-        SimpleFormatter formatter = new SimpleFormatter();  
-        fh.setFormatter(formatter);  
-        //log.info("Error log");  
+		log.addHandler(fh);  
+		//logger.setLevel(Level.ALL);  
+		SimpleFormatter formatter = new SimpleFormatter();  
+		fh.setFormatter(formatter);  
+		//log.info("Error log");  
 		log.setLevel(Level.WARNING);
 	}
 
@@ -80,7 +80,7 @@ public class HttpServer {
 	private void startServer() throws Exception {
 		servletContext = null;
 		try {
-			servSock = new ServerSocket(port, 2000);
+			servSock = new ServerSocket(port, 10000);
 			System.out.println("Server Started");
 			Socket sock = null;
 			MyContainer container = new MyContainer();
@@ -89,33 +89,34 @@ public class HttpServer {
 				System.err.print("Invalid path to web.xml");
 				return;
 			}
-			
-				ThreadPool t = new ThreadPool(root,this,port,container, log);
 
-				//Until a shutdown request has been sent
-				while (t.intFlag == 0) {
-					sock = servSock.accept();
-					//Send the request to thread pool
-					t.handleRequest(sock);
-				}
+			ThreadPool t = new ThreadPool(root,this,port,container, log);
+
+			//Until a shutdown request has been sent
+			while (t.intFlag == 0) {
+				sock = servSock.accept();
+				//Send the request to thread pool
+				t.handleRequest(sock);		
+			}
+			if(sock!=null)
 				sock.close();
-			}
-			catch (IOException e) {
-				System.out.println("Stopped the server");
-				log.warning("Exception while starting the server: Stopped the server"+"\n");
-			}
 		}
-
-		/*Stop the Server when a shutdown is requested
-		 * Thread pool will request for the shutdown
-		 */
-		public void stopServer() {
-			try {
-				servSock.close();
-			} catch (IOException e) {
-				System.out.println("Cannot close the socket");
-				log.warning("Exception while closing the socket"+"\n");
-
-			}
+		catch (IOException e) {
+			System.out.println("Stopped the server");
+			log.warning("Exception while starting the server: Stopped the server"+"\n");
 		}
 	}
+
+	/*Stop the Server when a shutdown is requested
+	 * Thread pool will request for the shutdown
+	 */
+	public void stopServer() {
+		try {
+			servSock.close();
+		} catch (IOException e) {
+			System.out.println("Cannot close the socket");
+			log.warning("Exception while closing the socket"+"\n");
+
+		}
+	}
+}
